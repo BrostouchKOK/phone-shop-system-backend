@@ -145,6 +145,28 @@ export const updateProduct = async (req, res) => {
   }
 };
 
+// @desc    លុបផលិតផល (Delete Product)
+// @route   DELETE /api/products/:id
+export const deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "រកមិនឃើញផលិតផលដែលត្រូវលុបឡើយ!" });
+    }
+
+    await product.deleteOne();
+    res
+      .status(200)
+      .json({ success: true, message: "បានលុបផលិតផលចេញពីប្រព័ន្ធរួចរាល់!" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "មានបញ្ហាបច្ចេកទេស: " + error.message });
+  }
+};
+
 // @desc    ស្វែងរក និងចម្រាញ់ផលិតផល (Search & Filter Products)
 // @route   GET /api/products/search/filter
 export const searchProducts = async (req, res) => {
