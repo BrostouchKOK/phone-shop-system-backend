@@ -1,4 +1,5 @@
 import Category from "../models/Category.js";
+import Product from "../models/Product.js";
 
 // @desc    បង្កើត Category ថ្មី (Admin Only)
 // @route   POST /api/categories

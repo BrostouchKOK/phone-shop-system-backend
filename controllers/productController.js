@@ -29,7 +29,7 @@ export const createProduct = async (req, res) => {
     }
 
     // ពិនិត្យមើលរូបភាព
-    if (images.length === 0) {
+    if (!images || images.length === 0 || !images[0]) {
       return res.status(400).json({
         success: false,
         message: "សូមបញ្ចូលរូបភាពផលិតផលយ៉ាងហោចណាស់ ១ សន្លឹក!",
