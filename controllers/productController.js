@@ -63,37 +63,54 @@ export const createProduct = async (req, res) => {
 
 // @desc    ទាញយកផលិតផលទាំងអស់
 // @route   GET /api/products
+// @desc    ទាញយកផលិតផលទាំងអស់ (ព្រមទាំង Search & Filter ក្នុងពេលតែមួយ)
+// @route   GET /api/products
 export const getProducts = async (req, res) => {
   try {
-    // ១. កំណត់យក Page និង Limit ពី URL (បើអត់ផ្ញើមកទេ យកទំព័រទី ១ និងបង្ហាញម្តង ៨ គ្រឿងជា Default)
+    // ១. ចាប់យក Query ពី Frontend (ប្តូរពី keyword មកជា search ឱ្យត្រូវជាមួយ Frontend)
+    const { search, brand, category, minPrice, maxPrice } = req.query;
+    let query = {};
+
+    // ២. ចាក់លក្ខខណ្ឌចម្រោះទិន្នន័យ (Filters)
+    if (search) {
+      query.name = { $regex: search, $options: "i" }; // ស្វែងរកតាមឈ្មោះ
+    }
+    if (brand) {
+      query.brand = brand;
+    }
+    if (category) {
+      query.brand = { $regex: category, $options: "i" };
+    }
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 8;
-
-    // ២. គណនាចំនួនទិន្នន័យដែលត្រូវរំលង (Skip)
-    // ឧទាហរណ៍៖ បើ Page 2 គឺត្រូវ Skip (2-1) * 8 = រំលង ៨ គ្រឿងដំបូង ចាប់យកពីគ្រឿងទី ៩ ទៅ
     const skip = (page - 1) * limit;
 
-    // ៣. រាប់ចំនួនផលិតផលសរុបដែលមានក្នុង Database
-    const totalProducts = await Product.countDocuments();
+    // ៣. រាប់ចំនួនផលិតផលសរុបដែលត្រូវនឹងលក្ខខណ្ឌ (Query)
+    const totalMatchedProducts = await Product.countDocuments(query);
 
-    // ប្រើ .populate('category', 'name') ដើម្បីទាញយកឈ្មោះ Category មកបង្ហាញជាមួយ
-    const products = await Product.find({})
+    // ៤. ទាញយកទិន្នន័យ
+    const products = await Product.find(query)
       .populate("category", "name")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
 
-    // ៥. គណនាចំនួនទំព័រសរុប
-    const totalPages = Math.ceil(totalProducts / limit);
+    const totalPages = Math.ceil(totalMatchedProducts / limit);
 
     res.status(200).json({
       success: true,
       message: "ទាញយកទិន្នន័យផលិតផលបានជោគជ័យ!",
       pagination: {
-        totalProducts, // ចំនួនផលិតផលសរុបទាំងអស់ (ឧទាហរណ៍៖ ១០០ គ្រឿង)
-        totalPages, // ចំនួនទំព័រសរុប (ឧទាហរណ៍៖ ១០០/៨ = ១៣ ទំព័រ)
-        currentPage: page, // ទំព័របច្ចុប្បន្ន
-        limit, // ចំនួនបង្ហាញក្នុងមួយទំព័រ
+        totalProducts: totalMatchedProducts, // ត្រឡប់ចំនួនដែលត្រូវលក្ខខណ្ឌទៅវិញ
+        totalPages,
+        currentPage: page,
+        limit,
       },
       data: products,
     });
