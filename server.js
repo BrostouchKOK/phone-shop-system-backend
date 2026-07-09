@@ -6,6 +6,7 @@ import connectDB from "./config/db.js";
 // Import Routes ទាំងពីររបស់យើងចូលមក
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
+import authRoutes from './routes/authRoutes.js';
 
 // ហៅការកំណត់ Environment Variables
 dotenv.config();
@@ -25,8 +26,9 @@ app.use(express.urlencoded({ extended: true })); // អនុញ្ញាតឱ�
 // ==========================================
 // 2. ការកំណត់ API Endpoints (Routes)
 // ==========================================
-app.use("/api/products", productRoutes); // រាល់ផ្លូវផលិតផល ត្រូវផ្តើមដោយ /api/products
-app.use("/api/categories", categoryRoutes); // រាល់ផ្លូវប្រភេទផលិតផល ត្រូវផ្តើមដោយ /api/categories
+app.use("/api/products", productRoutes); 
+app.use("/api/categories", categoryRoutes); 
+app.use('/api/auth', authRoutes);
 
 // ផ្លូវសាកល្បងនៅលើ Browser (Root Route)
 app.get("/", (req, res) => {
