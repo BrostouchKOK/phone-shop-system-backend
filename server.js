@@ -7,6 +7,8 @@ import connectDB from "./config/db.js";
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import authRoutes from './routes/authRoutes.js';
+import cartRoutes from './routes/cartRoutes.js';
+import orderRoutes from "./routes/orderRoutes.js";
 
 // ហៅការកំណត់ Environment Variables
 dotenv.config();
@@ -29,6 +31,9 @@ app.use(express.urlencoded({ extended: true })); // អនុញ្ញាតឱ�
 app.use("/api/products", productRoutes); 
 app.use("/api/categories", categoryRoutes); 
 app.use('/api/auth', authRoutes);
+app.use('/api/cart',cartRoutes);
+app.use("/api/orders", orderRoutes);
+
 
 // ផ្លូវសាកល្បងនៅលើ Browser (Root Route)
 app.get("/", (req, res) => {
