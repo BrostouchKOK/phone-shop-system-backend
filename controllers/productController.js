@@ -65,15 +65,36 @@ export const createProduct = async (req, res) => {
 // @route   GET /api/products
 export const getProducts = async (req, res) => {
   try {
+    // ១. កំណត់យក Page និង Limit ពី URL (បើអត់ផ្ញើមកទេ យកទំព័រទី ១ និងបង្ហាញម្តង ៨ គ្រឿងជា Default)
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 8;
+
+    // ២. គណនាចំនួនទិន្នន័យដែលត្រូវរំលង (Skip)
+    // ឧទាហរណ៍៖ បើ Page 2 គឺត្រូវ Skip (2-1) * 8 = រំលង ៨ គ្រឿងដំបូង ចាប់យកពីគ្រឿងទី ៩ ទៅ
+    const skip = (page - 1) * limit;
+
+    // ៣. រាប់ចំនួនផលិតផលសរុបដែលមានក្នុង Database
+    const totalProducts = await Product.countDocuments();
+
     // ប្រើ .populate('category', 'name') ដើម្បីទាញយកឈ្មោះ Category មកបង្ហាញជាមួយ
     const products = await Product.find({})
       .populate("category", "name")
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // ៥. គណនាចំនួនទំព័រសរុប
+    const totalPages = Math.ceil(totalProducts / limit);
 
     res.status(200).json({
       success: true,
       message: "ទាញយកទិន្នន័យផលិតផលបានជោគជ័យ!",
-      count: products.length, // បន្ថែមចំនួនសរុបដើម្បីងាយស្រួលដឹងថាលក់អស់ប៉ុន្មានមុខ
+      pagination: {
+        totalProducts, // ចំនួនផលិតផលសរុបទាំងអស់ (ឧទាហរណ៍៖ ១០០ គ្រឿង)
+        totalPages, // ចំនួនទំព័រសរុប (ឧទាហរណ៍៖ ១០០/៨ = ១៣ ទំព័រ)
+        currentPage: page, // ទំព័របច្ចុប្បន្ន
+        limit, // ចំនួនបង្ហាញក្នុងមួយទំព័រ
+      },
       data: products,
     });
   } catch (error) {
@@ -193,10 +214,32 @@ export const searchProducts = async (req, res) => {
       if (maxPrice) query.price.$lte = Number(maxPrice); // តូចជាង ឬស្មើ
     }
 
-    const products = await Product.find(query).populate("category", "name");
-    res
-      .status(200)
-      .json({ success: true, count: products.length, data: products });
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 8; // បង្ហាញម្តង ៨ គ្រឿង
+    const skip = (page - 1) * limit;
+
+    //រាប់ចំនួនផលិតផលសរុបដែលត្រូវនឹងលក្ខខណ្ឌស្វែងរក (មិនមែនទាំងអស់ក្នុង DB ទេ)
+    const totalMatchedProducts = await Product.countDocuments(query);
+
+    const products = await Product.find(query)
+      .populate("category", "name")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    // គណនាចំនួនទំព័រសរុបនៃលទ្ធផលស្វែងរក
+    const totalPages = Math.ceil(totalMatchedProducts / limit);
+
+    res.status(200).json({
+      success: true,
+      pagination: {
+        totalProducts: totalMatchedProducts, // ចំនួនដែលរកឃើញ (ឧទាហរណ៍៖ ឃើញតែ ២០ គ្រឿងដែលជា iPhone)
+        totalPages, // ចំនួនទំព័រសរុប (២០/៨ = ៣ ទំព័រ)
+        currentPage: page,
+        limit,
+      },
+      data: products,
+    });
   } catch (error) {
     res
       .status(500)
