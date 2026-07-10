@@ -66,7 +66,7 @@ export const getCart = async (req, res) => {
     // ទាញយកកន្ត្រកទំនិញមកបង្ហាញ ព្រមទាំងទាញព័ត៌មានលម្អិតរបស់ Product (ឈ្មោះ, តម្លៃ, រូបភាព)
     const cart = await Cart.findOne({ user: req.user._id }).populate(
       "items.product",
-      "name price images stock",
+      "name price images stock brand",
     );
 
     if (!cart) {

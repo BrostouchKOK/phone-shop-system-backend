@@ -80,15 +80,68 @@ export const createOrder = async (req, res) => {
   }
 };
 
-// @desc    ទាញយកប្រវត្តបញ្ជាទិញរបស់ User ម្នាក់ៗ (My Orders)
-// @route   GET /api/orders/myorders
-// @access  Private
 export const getMyOrders = async (req, res) => {
   try {
-    const orders = await Order.find({ user: req.user._id }).sort({
-      createdAt: -1,
-    });
+    const orders = await Order.find({ user: req.user._id })
+      .populate({
+        path: "orderItems.product",
+        select: "images name",
+      })
+      .sort({ createdAt: -1 });
+
     res.status(200).json({ success: true, data: orders });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Error: " + error.message });
+  }
+};
+
+export const getAllOrders = async (req, res) => {
+  try {
+    //ទាញយកព័ត៌មាន user ដោយថែម field "role" មកជាមួយដើម្បីភាពច្បាស់លាស់
+    const orders = await Order.find({})
+      .populate("user", "name email role")
+      .populate("orderItems.product", "images name")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Error: " + error.message });
+  }
+};
+
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { status } = req.body; // ចាប់យក Status ថ្មីពី Frontend (ឧទាហរណ៍៖ "Processing")
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "រកមិនឃើញវិក្កយបត្រនេះទេ!" });
+    }
+
+    // កែប្រែស្ថានភាព
+    order.status = status;
+
+    // ប្រសិនបើស្ថានភាពប្តូរទៅជា Delivered (បានប្រគល់ជោគជ័យ) ឱ្យដូរស្ថានភាពទូទាត់លុយជា true តែម្តង
+    if (status === "Delivered") {
+      order.isPaid = true;
+    }
+
+    const updatedOrder = await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: `បានធ្វើបច្ចុប្បន្នភាពស្ថានភាពទៅជា "${status}" ជោគជ័យ!`,
+      data: updatedOrder,
+    });
   } catch (error) {
     res
       .status(500)

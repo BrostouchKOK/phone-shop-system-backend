@@ -3,12 +3,12 @@ import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
 
-// Import Routes ទាំងពីររបស់យើងចូលមក
 import productRoutes from "./routes/productRoutes.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import authRoutes from './routes/authRoutes.js';
 import cartRoutes from './routes/cartRoutes.js';
 import orderRoutes from "./routes/orderRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 
 // ហៅការកំណត់ Environment Variables
 dotenv.config();
@@ -33,6 +33,7 @@ app.use("/api/categories", categoryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/cart',cartRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/users", userRoutes);
 
 
 // ផ្លូវសាកល្បងនៅលើ Browser (Root Route)
